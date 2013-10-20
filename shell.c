@@ -87,6 +87,20 @@ void handleInput(char * input, char * cwd){
   		index ++;
   	}
   	command[index] = NULL;
+    // Execute binary
+    char *progPath = getProgramPath(binName);
+    if(progPath != NULL){
+    //printf("%s\n", progPath);
+    pid_t pid=fork();
+    if (pid==0) {
+      execv(progPath,command);
+    }
+    else { 
+      waitpid(pid,0,0); 
+      }
+    }
+    if (strcmp(binName,"cd")==0 || strncmp(binName, "$HOME=", 6) == 0 || strncmp(binName, "$PATH=", 6) == 0)
+    {
     if(strcmp(binName,"cd")==0){
       if(command[1] == NULL) {
         changeDirectory("HOME");
@@ -95,18 +109,10 @@ void handleInput(char * input, char * cwd){
         changeDirectory(command[1]);
       }
     }
-    else {
-  	char *progPath = getProgramPath(binName);
-    if(progPath != NULL){
-	  printf("%s\n", progPath);
-	  pid_t pid=fork();
-	  if (pid==0) {
-		  execv(progPath,command);
-	  }
-	  else { 
-		  waitpid(pid,0,0); 
-	  }
-  }
+    if(strncmp(binName, "$HOME=", 6) == 0 || strncmp(binName, "$PATH=", 6) == 0){
+      printf("Changing path or home\n");
+      changeProfileVariables(binName);
+    }
   }
 }
 
@@ -137,17 +143,38 @@ char* getProgramPath(char *progName){
       pstr = strtok (NULL, ":\n");
     	closedir (pDir); 
 	} 
+  printf("%s is not a known command.\n", progName);
   return "";
 }
 
 void changeDirectory(const char *path) {
   printf("%s\n", HOME);
- if(strcmp(path,"HOME") == 0){
-  chdir(HOME);
-  return;
+ if(strcmp(path,"HOME") == 0) {
+  if(chdir(HOME) == -1) {
+    printf("HOME directory not found.\n");
+    return;
+  }
  }
- // if(strcmp(path, "") == 0) {
-   // printf("%s\n", path);
-  //}
- printf("%d",chdir(path));
+ else {
+  if(chdir(path) == -1){
+    printf("%s directory not found.\n", path);
+  }
+  else {
+
+  }
+ }
+}
+
+void changeProfileVariables(char *variableName){
+  if(strstr(variableName,"$HOME")){
+    printf("Changing home\n");
+    memmove (variableName,variableName+6, strlen(variableName));
+    strcpy(HOME,variableName);
+  }else if(strstr(variableName,"$PATH")){
+    printf("Changing path\n" );
+    memmove (variableName,variableName+6, strlen(variableName));
+    strcpy(PATH,variableName);
+  }
+  printf("PATH: %s\n", PATH);
+  printf("HOME: %s\n", HOME);
 }

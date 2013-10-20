@@ -9,3 +9,4 @@ void initShell();
 void handleInput(char*, char *);
 char* getProgramPath(char *);
 void changeDirectory(const char *);
+void changeProfileVariables(char *);
