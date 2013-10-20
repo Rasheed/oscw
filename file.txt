@@ -1,2 +1,2 @@
-$HOME=/home
+$HOME=dadasd
 $PATH=/bin:/usr/bin:/usr/local/bin

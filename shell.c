@@ -87,6 +87,22 @@ void handleInput(char * input, char * cwd){
   		index ++;
   	}
   	command[index] = NULL;
+    if (strcmp(binName,"cd")==0 || strncmp(binName, "$HOME=", 6) == 0 || strncmp(binName, "$PATH=", 6) == 0)
+      {
+      if(strcmp(binName,"cd")==0){
+        if(command[1] == NULL) {
+         changeDirectory("HOME");
+        }
+        else {
+          changeDirectory(command[1]);
+       }
+      }
+      if(strncmp(binName, "$HOME=", 6) == 0 || strncmp(binName, "$PATH=", 6) == 0){
+       printf("Changing path or home\n");
+       changeProfileVariables(binName);
+      }
+    }
+    else{
     // Execute binary
     char *progPath = getProgramPath(binName);
     if(progPath != NULL){
@@ -98,20 +114,6 @@ void handleInput(char * input, char * cwd){
     else { 
       waitpid(pid,0,0); 
       }
-    }
-    if (strcmp(binName,"cd")==0 || strncmp(binName, "$HOME=", 6) == 0 || strncmp(binName, "$PATH=", 6) == 0)
-    {
-    if(strcmp(binName,"cd")==0){
-      if(command[1] == NULL) {
-        changeDirectory("HOME");
-      }
-      else {
-        changeDirectory(command[1]);
-      }
-    }
-    if(strncmp(binName, "$HOME=", 6) == 0 || strncmp(binName, "$PATH=", 6) == 0){
-      printf("Changing path or home\n");
-      changeProfileVariables(binName);
     }
   }
 }
@@ -159,22 +161,26 @@ void changeDirectory(const char *path) {
   if(chdir(path) == -1){
     printf("%s directory not found.\n", path);
   }
-  else {
-
-  }
  }
 }
 
 void changeProfileVariables(char *variableName){
   if(strstr(variableName,"$HOME")){
-    printf("Changing home\n");
+    //printf("Changing home\n");
     memmove (variableName,variableName+6, strlen(variableName));
     strcpy(HOME,variableName);
   }else if(strstr(variableName,"$PATH")){
-    printf("Changing path\n" );
+    //printf("Changing path\n" );
     memmove (variableName,variableName+6, strlen(variableName));
     strcpy(PATH,variableName);
   }
-  printf("PATH: %s\n", PATH);
-  printf("HOME: %s\n", HOME);
+  FILE *pf = fopen("PROFILE", "w");
+  if (pf == NULL)
+  {
+    printf("Error opening file\n");
+  }
+  // Write new variables to file.
+  fprintf(pf, "$HOME=%s\n",HOME);
+  fprintf(pf, "$PATH=%s\n",PATH);
+  fclose(pf);
 }
