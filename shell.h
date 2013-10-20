@@ -8,5 +8,4 @@ void profileReader();
 void initShell();
 void handleInput(char*, char *);
 char* getProgramPath(char *);
-
-#define length(x)  (sizeof(x) / sizeof(x[0]))
+void changeDirectory(const char *);

@@ -4,12 +4,8 @@ char PATH[128];
 char HOME[128];
 
 int main(){
-	// Read PROFILE FILE
 	profileReader();
 	initShell();
-	//execve("/bin/ls",HOME,PATH);
-	// prompt for input"/usr"
-	// handle input.
 	return 0;
 }
 
@@ -91,24 +87,38 @@ void handleInput(char * input, char * cwd){
   		index ++;
   	}
   	command[index] = NULL;
+    if(strcmp(binName,"cd")==0){
+      if(command[1] == NULL) {
+        changeDirectory("HOME");
+      }
+      else {
+        changeDirectory(command[1]);
+      }
+    }
+    else {
   	char *progPath = getProgramPath(binName);
-	printf("%s\n", progPath);
-	pid_t pid=fork();
-	if (pid==0) {
-		execv(progPath,command);
-	}
-	else { 
-		waitpid(pid,0,0); 
-	}
+    if(progPath != NULL){
+	  printf("%s\n", progPath);
+	  pid_t pid=fork();
+	  if (pid==0) {
+		  execv(progPath,command);
+	  }
+	  else { 
+		  waitpid(pid,0,0); 
+	  }
+  }
+  }
 }
 
 char* getProgramPath(char *progName){
 	char *pstr;
-	char *fullProgName = (char *) malloc(1024);
+	char *fullProgName = malloc(1024);
 	struct dirent *pDirent;
-    DIR *pDir;
-	pstr = strtok (PATH,":\n");
+  DIR *pDir;
+  strcpy(fullProgName,PATH);
+	pstr = strtok (fullProgName,":\n");
 	while (pstr != NULL){
+      //printf("%s\n", pstr);
     	pDir = opendir (pstr);
     	if (pDir == NULL) {
     	    printf ("Cannot open directory '%s'\n", pstr);
@@ -116,14 +126,28 @@ char* getProgramPath(char *progName){
     	}
     	while ((pDirent = readdir(pDir)) != NULL) {
         	//printf ("%s\n", pDirent);
-        	if(strcmp(pDirent->d_name, progName) == 0 ){
+        	if(strcmp(pDirent->d_name, progName) == 0 ) {
   				strcpy (fullProgName,pstr);
   				strcat (fullProgName, "/");
   				strcat (fullProgName,progName);
+          closedir (pDir); 
+          return fullProgName;
         	}
     	}
+      pstr = strtok (NULL, ":\n");
     	closedir (pDir); 
-    	pstr = strtok (NULL, ":\n");
 	} 
-	return fullProgName;
+  return "";
+}
+
+void changeDirectory(const char *path) {
+  printf("%s\n", HOME);
+ if(strcmp(path,"HOME") == 0){
+  chdir(HOME);
+  return;
+ }
+ // if(strcmp(path, "") == 0) {
+   // printf("%s\n", path);
+  //}
+ printf("%d",chdir(path));
 }
